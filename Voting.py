@@ -1,3 +1,4 @@
+
 class Voting_system:
     def __init__(self):
         print("Working in Voting special method or constructor ")
@@ -41,13 +42,15 @@ class Voting_system:
             r_name = input("Enter your name to register!")
             r_phone = input("Enter your phone to register!")
             r_address = input("Enter your address:")
+            r_money = int(input("Enter your amount:"))
+            r_points = 0
 
-            while self.R_money == 0:
-                r_money = int(input("Enter your amount:"))
-                if r_money >= 500:
-                    self.R_money = r_money
-                else:
-                    print("Amount too low")
+            while r_money < 500:
+                print("Amount too low")
+                r_money = int(input("Enter your amount again:"))
+
+            if r_money >= 500:
+                self.R_money = r_money
 
             #            print(r_money)
 
@@ -62,7 +65,8 @@ class Voting_system:
                     print("Your passwords was recorded!")
                     self.id = len(self.db)
                     data_form: dict = {self.id: {"email": r_email, "name": r_name, "phone": r_phone,
-                                                 "address": r_address, "password": r_pass1, "money": self.R_money}}
+                                                 "address": r_address, "password": r_pass1, "money": self.R_money,
+                                                 "user_points": r_points}}
 
                     self.db.update(data_form)
 
@@ -92,7 +96,7 @@ class Voting_system:
             except Exception as err:
                 print("Invalid Input!", err)
 
-    def buy_points(self):
+    def buy_points(self, l_id):
         print("You can buy points with your money")
         if self.R_money < 500:
             print("Insufficient amount")
@@ -123,6 +127,9 @@ class Voting_system:
                         else:
                             self.R_money = self.R_money - (b_points * 500)
                             self.user_points = self.user_points + b_points
+                            self.db[l_id]["money"] = self.R_money
+                            self.db[l_id]["user_points"] = self.user_points
+
                             print("You have successfully bought {} points".format(b_points))
                             print("This is your current points {}.".format(self.user_points))
                             print("This is your current money {}".format(self.R_money))
@@ -145,7 +152,7 @@ class Voting_system:
                     self.top_up()
                     break
                 elif option == 2:
-                    self.buy_points()
+                    self.buy_points(self.l_id)
                     break
                 else:
                     print("Invalid")
@@ -178,17 +185,33 @@ class Voting_system:
                 student_name = self.students[i]["name"]
                 student_vote_mark = self.students[i]["v_mark"]
                 student_voter = []
-                for j in range(len(self.students[i]["voter"])-1):
-                    student_voter[j] = self.students[i]["voter"][j]
+                for j in range(len(self.students[i]["voter"])):
+                    student_voter.append(self.students[i]["voter"][j])
 
-                total_student_data = student_name + ' ' + str(student_vote_mark) + ' ' + str(student_voter)
+                total_student_data = student_name + ' ' + str(student_vote_mark) + ' ' + str(student_voter) + '\n'
+
                 votefile.write(total_student_data)
 
+            votefile.write('\n')
+
+            for i in range(len(self.db)):
+                voter_email = self.db[i]["email"]
+                voter_name = self.db[i]["name"]
+                voter_phone = self.db[i]["phone"]
+                voter_address = self.db[i]["address"]
+                voter_password = self.db[i]["password"]
+                voter_money = self.db[i]["money"]
+                voter_points = self.db[i]["user_points"]
+
+                total_voters_data = voter_email + ' ' + voter_name + ' ' + str(voter_phone) + ' ' + voter_address + ' ' + str(voter_password) + ' ' + str(voter_money) + ' ' + str(voter_points) + '\n'
+                votefile.write(total_voters_data)
 
     def user_sector(self, l_id):
+        self.R_money = self.db[l_id]["money"]
+        self.user_points = self.db[l_id]["user_points"]
         print("Welcome", self.db[l_id]["name"])
         if self.user_points == 0:
-            self.buy_points()
+            self.buy_points(l_id)
 
         print("Please select one!")
         for i in range(len(self.students)):
@@ -202,12 +225,13 @@ class Voting_system:
             points = int(input("Enter the vote amounts:"))
             if points > self.user_points:
                 print("You do not have enough points\nBuy more points")
-                self.buy_points()
+                self.buy_points(l_id)
                 print("You have bought enough points")
                 self.user_sector(l_id)
             else:
 
                 self.user_points = self.user_points - points
+                self.db[l_id]["user_points"] = self.user_points
 
                 self.students[v_id]["v_mark"] += points
                 for i in range(points):
@@ -231,6 +255,8 @@ class Voting_system:
                     self.user_sector(l_id)
                     break
                 elif vote_option == 2:
+                    self.user_points = 0
+                    self.R_money = 0
                     self.main_option()
                     break
                 elif vote_option == 3:
@@ -240,6 +266,11 @@ class Voting_system:
                     print("Invalid option after vote!")
             except Exception as err:
                 print(err)
+
+
+if __name__ == '__main__':
+    voting = Voting_system()
+    voting.main_option()
 
 # ဆက်ရေး ရန် 8-5-2023
 # voter များအား စာရင်း မှတ်ပေးရန်
